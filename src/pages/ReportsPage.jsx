@@ -142,7 +142,7 @@ export default function ReportsPage({ token, role }) {
           <p>{t('Complete the birth details below. Your draft will be prepared in the selected language.')}</p></div>
         <label className="report-language-select">{t('PDF language')}
           <select value={language} onChange={(event) => changeLanguage(event.target.value).catch((err) => setError(err.message))}>
-            <option value="en">English</option><option value="ta">?????</option><option value="hi">??????</option>
+            <option value="en">English</option><option value="ta">தமிழ்</option><option value="hi">हिन्दी</option>
           </select>
         </label>
       </div>
@@ -154,7 +154,7 @@ export default function ReportsPage({ token, role }) {
           <select name="consultation_id" required defaultValue="">
             <option value="" disabled>{t('Select a completed consultation')}</option>
             {consultations.map((item) => <option key={item.id} value={item.id}>
-              {item.counterpart_name || item.astrologer_id} ? {new Date(item.scheduled_at).toLocaleString()} ? {item.consultation_type}
+              {item.counterpart_name || item.astrologer_id} · {new Date(item.scheduled_at).toLocaleString()} · {item.consultation_type}
             </option>)}
           </select>
         </label>
@@ -164,8 +164,8 @@ export default function ReportsPage({ token, role }) {
           <input name="birth_place" autoComplete="off" aria-autocomplete="list" aria-expanded={placeMatches.length > 0}
             placeholder={t('Search a city or town')} value={birthPlaceQuery}
             onChange={(event) => { setBirthPlaceQuery(event.target.value); setSelectedBirthPlace(null); }} />
-          {searchingPlaces && <small className="field-help">{t('Searching places?')}</small>}
-          {selectedBirthPlace && <small className="field-help selected-location">? {selectedBirthPlace.label} ? {selectedBirthPlace.latitude.toFixed(4)}, {selectedBirthPlace.longitude.toFixed(4)}</small>}
+          {searchingPlaces && <small className="field-help">{t('Searching places…')}</small>}
+          {selectedBirthPlace && <small className="field-help selected-location">✓ {selectedBirthPlace.label} · {selectedBirthPlace.latitude.toFixed(4)}, {selectedBirthPlace.longitude.toFixed(4)}</small>}
           {placeMatches.length > 0 && <div className="location-results" role="listbox">{placeMatches.map((place, index) => {
             const label = place.display_name || place.place_name || place.name || place.formatted_address || place.address ||
               [place.city, place.region, place.country].filter(Boolean).join(', ');
@@ -179,7 +179,7 @@ export default function ReportsPage({ token, role }) {
         <div className="report-form-footer span-two">
           <small>{t('AI-assisted drafts should be reviewed before sharing.')}</small>
           <button className="primary-button" disabled={busy || !consultations.length || !selectedBirthPlace}>
-            {busy ? t('Preparing report?') : t('Generate report')}<span>?</span>
+            {busy ? t('Preparing report…') : t('Generate report')}<span>↗</span>
           </button>
         </div>
       </form>
@@ -192,22 +192,22 @@ export default function ReportsPage({ token, role }) {
         {rows && <span className="report-count">{rows.length} {t(rows.length === 1 ? 'report' : 'reports')}</span>}
       </div>
       {!rows && !error ? <PageState loading /> : !rows?.length ? <div className="reports-empty-state">
-        <span className="reports-empty-icon">?</span><h3>{t('No reports yet')}</h3>
+        <span className="reports-empty-icon">✧</span><h3>{t('No reports yet')}</h3>
         <p>{role === 'ASTROLOGER' ? t('Generate a report after completing a consultation.') : t('Reports shared after your consultations will appear here.')}</p>
       </div> : <div className="report-card-list">{rows.map((report) => <article className="report-card" key={report.id}>
         <div className="report-cover" aria-hidden="true"><span className="report-cover-mark">&#10022;</span><span className="report-cover-label">ASTRA <i>·</i> PERSONAL INSIGHT</span><span className="report-cover-rule" /><span className="report-cover-topic">{report.topic || t('Consultation guidance')}</span></div>
         <div className="report-card-top"><div className="report-card-icon" aria-hidden="true">&#10022;</div><div className="report-card-title">
           <h4>{report.title || t('Astrology consultation report')}</h4><p>{report.topic || t('Consultation guidance')}</p>
         </div><span className={`report-status status-${(report.status || 'SHARED').toLowerCase()}`}>{t(report.status || 'SHARED')}</span></div>
-        <div className="report-card-meta"><span>{t('Created')} ? {report.created_at ? new Date(report.created_at).toLocaleDateString() : t('Date unavailable')}</span>
-          <span>{t('Language')} ? {languageNames[report.language] || languageNames.en}</span></div>
+        <div className="report-card-meta"><span>{t('Created')} · {report.created_at ? new Date(report.created_at).toLocaleDateString() : t('Date unavailable')}</span>
+          <span>{t('Language')} · {languageNames[report.language] || languageNames.en}</span></div>
         <details className="report-preview"><summary>{t('Preview report')}</summary><p>{report.content?.summary || t('Report details are available in the PDF.')}</p></details>
         <div className="report-card-actions">
           {report.pdf_url && <button className="secondary-button" disabled={downloadingId === report.id} onClick={() => download(report)}>
-            {downloadingId === report.id ? t('Preparing PDF?') : t('Download PDF')} <span aria-hidden="true">?</span>
+            {downloadingId === report.id ? t('Preparing PDF…') : t('Download PDF')} <span aria-hidden="true">↓</span>
           </button>}
-          {role === 'ASTROLOGER' && report.status === 'DRAFT' && <button className="primary-button" onClick={() => share(report.id)}>{t('Share with client')}<span>?</span></button>}
-          {role === 'ASTROLOGER' && report.status === 'SHARED' && <span className="report-shared-label">? {t('Shared with client')}</span>}
+          {role === 'ASTROLOGER' && report.status === 'DRAFT' && <button className="primary-button" onClick={() => share(report.id)}>{t('Share with client')}<span>↗</span></button>}
+          {role === 'ASTROLOGER' && report.status === 'SHARED' && <span className="report-shared-label">✓ {t('Shared with client')}</span>}
         </div>
       </article>)}</div>}
     </section>
