@@ -137,7 +137,7 @@ export default function ReportsPage({ token, role }) {
 
     {role === 'ASTROLOGER' && <section className="content-card report-generator">
       <div className="report-generator-heading">
-        <div className="report-generator-icon" aria-hidden="true">?</div>
+        <div className="report-generator-icon" aria-hidden="true">&#10022;</div>
         <div><span className="section-kicker">{t('AI ASSISTED REPORT')}</span><h3>{t('Create a consultation report')}</h3>
           <p>{t('Complete the birth details below. Your draft will be prepared in the selected language.')}</p></div>
         <label className="report-language-select">{t('PDF language')}
@@ -195,7 +195,8 @@ export default function ReportsPage({ token, role }) {
         <span className="reports-empty-icon">?</span><h3>{t('No reports yet')}</h3>
         <p>{role === 'ASTROLOGER' ? t('Generate a report after completing a consultation.') : t('Reports shared after your consultations will appear here.')}</p>
       </div> : <div className="report-card-list">{rows.map((report) => <article className="report-card" key={report.id}>
-        <div className="report-card-top"><div className="report-card-icon" aria-hidden="true">?</div><div className="report-card-title">
+        <div className="report-cover" aria-hidden="true"><span className="report-cover-mark">&#10022;</span><span className="report-cover-label">ASTRA <i>·</i> PERSONAL INSIGHT</span><span className="report-cover-rule" /><span className="report-cover-topic">{report.topic || t('Consultation guidance')}</span></div>
+        <div className="report-card-top"><div className="report-card-icon" aria-hidden="true">&#10022;</div><div className="report-card-title">
           <h4>{report.title || t('Astrology consultation report')}</h4><p>{report.topic || t('Consultation guidance')}</p>
         </div><span className={`report-status status-${(report.status || 'SHARED').toLowerCase()}`}>{t(report.status || 'SHARED')}</span></div>
         <div className="report-card-meta"><span>{t('Created')} ? {report.created_at ? new Date(report.created_at).toLocaleDateString() : t('Date unavailable')}</span>
