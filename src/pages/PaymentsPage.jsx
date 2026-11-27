@@ -1,0 +1,5 @@
+import { useEffect,useState } from 'react';
+import { paymentApi } from '../api/paymentApi';
+import { PageHeading,DataTable,PageState } from '../components/common/PageState';
+import { useLanguage } from '../contexts/LanguageContext';
+export default function PaymentsPage({token}){const {t}=useLanguage();const [rows,setRows]=useState(null);const [error,setError]=useState('');useEffect(()=>{paymentApi.mine(token).then(setRows).catch(e=>setError(e.message));},[token]);return <><PageHeading eyebrow={t('PAYMENT HISTORY')} title={t('Payments')} description={t('View payment records associated with your consultations.')}/><PageState loading={!rows&&!error} error={error}><DataTable columns={[{key:'id',label:t('Payment')},{key:'consultation_id',label:t('Consultation')},{key:'amount',label:t('Amount')},{key:'status',label:t('Status')},{key:'created_at',label:t('Date'),render:r=>r.created_at?new Date(r.created_at).toLocaleDateString():'—'}]} rows={rows||[]} empty={t('No payments yet.')}/></PageState></>;}
