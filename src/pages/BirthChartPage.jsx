@@ -73,8 +73,22 @@ export default function BirthChartPage({ token }) {
           house_system: 'P',
         },
       }, token);
-      const audioBytes = Uint8Array.from(atob(result.audio_mpeg_base64), (char) => char.charCodeAt(0));
-      const audioUrl = URL.createObjectURL(new Blob([audioBytes], { type: 'audio/mpeg' }));
+      const encodedAudio = result.audio_wav_base64 || result.audio_mpeg_base64;
+      if (typeof encodedAudio !== 'string' || !encodedAudio.trim()) {
+        throw new Error('The voice API returned no audio. Redeploy the backend voice API and try again.');
+      }
+      const normalizedAudio = encodedAudio
+        .replace(/^data:audio\/[^;]+;base64,/, '')
+        .replace(/\s/g, '')
+        .replace(/-/g, '+')
+        .replace(/_/g, '/');
+      if (!/^[A-Za-z0-9+/]*={0,2}$/.test(normalizedAudio) || normalizedAudio.length % 4 === 1) {
+        throw new Error('The voice API returned invalid audio data. Redeploy the backend voice API and try again.');
+      }
+      const paddedAudio = normalizedAudio.padEnd(normalizedAudio.length + ((4 - normalizedAudio.length % 4) % 4), '=');
+      const audioBytes = Uint8Array.from(atob(paddedAudio), (char) => char.charCodeAt(0));
+      const audioType = result.audio_wav_base64 ? 'audio/wav' : 'audio/mpeg';
+      const audioUrl = URL.createObjectURL(new Blob([audioBytes], { type: audioType }));
       setSpokenAnswer({ ...result, audioUrl });
     } catch (err) { setAnswerError(err.message); } finally { setAnswerBusy(false); }
   };
