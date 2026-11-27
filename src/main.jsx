@@ -7,6 +7,7 @@ import './styles/global.css';
 import './styles/features.css';
 import './styles/locations.css';
 import './styles/theme.css';
+import './styles/password.css';
 
 createRoot(document.getElementById('root')).render(
   <React.StrictMode>
