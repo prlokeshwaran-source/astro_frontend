@@ -8,6 +8,7 @@ const astrologerActions = {
   ACCEPTED: [['IN_PROGRESS', 'Start session']],
   IN_PROGRESS: [['COMPLETED', 'Mark completed']],
 };
+const GOOGLE_MEET_URL = 'https://meet.google.com/qqq-iitb-npp';
 
 export default function ConsultationsPage({ token, selectedAstrologer, clearSelection, role, navigate }) {
   const { t } = useLanguage();
@@ -54,21 +55,28 @@ export default function ConsultationsPage({ token, selectedAstrologer, clearSele
   };
 
   const actions = (consultation) => {
+    const canJoinVideo = consultation.consultation_type === 'VIDEO' &&
+      ['ACCEPTED', 'APPROVED', 'SCHEDULED', 'IN_PROGRESS'].includes(consultation.status);
+    const joinVideoButton = canJoinVideo && <a className="primary-button" href={GOOGLE_MEET_URL}
+      target="_blank" rel="noopener noreferrer">{t('Join Google Meet')} <span>↗</span></a>;
+
     if (role === 'ASTROLOGER') {
       return <span className="row-actions">
         {(astrologerActions[consultation.status] || []).map(([status, label]) => (
           <button key={status} disabled={updatingId === consultation.id} onClick={() => updateStatus(consultation, status)}>{t(label)}</button>
         ))}
+        {joinVideoButton}
         {consultation.status === 'COMPLETED' && <button onClick={() => navigate('reports')}>{t('Create report')}</button>}
       </span>;
     }
     if (role === 'USER' && ['PENDING', 'ACCEPTED'].includes(consultation.status)) {
       return <span className="row-actions">
+        {joinVideoButton}
         <button onClick={() => navigate('chat')}>{t('Messages')}</button>
         <button disabled={updatingId === consultation.id} onClick={() => updateStatus(consultation, 'CANCELLED')}>{t('Cancel')}</button>
       </span>;
     }
-    return <button className="inline-action" onClick={() => navigate('chat')}>{t('Messages')}</button>;
+    return <span className="row-actions">{joinVideoButton}<button className="inline-action" onClick={() => navigate('chat')}>{t('Messages')}</button></span>;
   };
 
   return <>
