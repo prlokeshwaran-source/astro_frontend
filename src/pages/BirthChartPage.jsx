@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { astrologyApi } from '../api/astrologyApi';
 import { locationApi } from '../api/locationApi';
+import { voiceApi } from '../api/voiceApi';
 import { useLanguage } from '../contexts/LanguageContext';
 import { DataTable, PageHeading } from '../components/common/PageState';
 import ChartDiagram from '../components/charts/ChartDiagram';
@@ -46,6 +47,41 @@ export default function BirthChartPage({ token }) {
   const [chartStyle, setChartStyle] = useState('south');
   const [selectedMahadasha, setSelectedMahadasha] = useState('all');
   const [selectedBhukti, setSelectedBhukti] = useState('all');
+  const [question, setQuestion] = useState('');
+  const [spokenAnswer, setSpokenAnswer] = useState(null);
+  const [answerBusy, setAnswerBusy] = useState(false);
+  const [answerError, setAnswerError] = useState('');
+
+  const askByVoice = async (event) => {
+    event.preventDefault();
+    setAnswerBusy(true); setAnswerError('');
+    setSpokenAnswer((previous) => {
+      if (previous?.audioUrl) URL.revokeObjectURL(previous.audioUrl);
+      return null;
+    });
+    try {
+      const date = new Date(birthDatetime);
+      const offset = -date.getTimezoneOffset();
+      const zone = `${offset >= 0 ? '+' : '-'}${String(Math.floor(Math.abs(offset) / 60)).padStart(2, '0')}:${String(Math.abs(offset) % 60).padStart(2, '0')}`;
+      const result = await voiceApi.astrologyAnswer({
+        question,
+        language,
+        chart: {
+          birth_datetime: `${birthDatetime}:00${zone}`,
+          latitude: selectedPlace.latitude,
+          longitude: selectedPlace.longitude,
+          house_system: 'P',
+        },
+      }, token);
+      const audioBytes = Uint8Array.from(atob(result.audio_mpeg_base64), (char) => char.charCodeAt(0));
+      const audioUrl = URL.createObjectURL(new Blob([audioBytes], { type: 'audio/mpeg' }));
+      setSpokenAnswer({ ...result, audioUrl });
+    } catch (err) { setAnswerError(err.message); } finally { setAnswerBusy(false); }
+  };
+
+  useEffect(() => () => {
+    if (spokenAnswer?.audioUrl) URL.revokeObjectURL(spokenAnswer.audioUrl);
+  }, [spokenAnswer]);
 
   useEffect(() => {
     const query = placeQuery.trim();
@@ -161,6 +197,15 @@ export default function BirthChartPage({ token }) {
       {error && <p className="page-error" role="alert">{error}</p>}
       {chart && <>
         <div className="chart-summary">{results.map(([label, value]) => <div className="chart-result" key={label}><small>{label}</small><strong>{value || '—'}</strong></div>)}</div>
+        <section className="content-card nested voice-question-card">
+          <div className="card-title"><div><span className="section-kicker">VOICE ASTROLOGY</span><h3>Ask a question</h3></div></div>
+          <form className="form-grid" onSubmit={askByVoice}>
+            <label className="span-two">Your question<textarea required minLength={3} maxLength={1000} value={question} onChange={(event) => setQuestion(event.target.value)} placeholder="Ask about your chart…" /></label>
+            <button className="primary-button span-two" disabled={answerBusy}>{answerBusy ? 'Preparing your spoken answer…' : 'Get spoken answer'}<span>↗</span></button>
+          </form>
+          {answerError && <p className="page-error" role="alert">{answerError}</p>}
+          {spokenAnswer && <div className="voice-answer"><p>{spokenAnswer.answer}</p><audio controls autoPlay src={spokenAnswer.audioUrl} /></div>}
+        </section>
         <ChartDiagram title="RASI CHART" chart={chart.rasi_chart} style={chartStyle} onStyleChange={setChartStyle} labels={{ house: t.house, lagna: t.ascendant, center: 'Birth chart' }} />
         <ChartDiagram title="NAVAMSA (D9)" chart={chart.navamsa_chart} style={chartStyle} onStyleChange={setChartStyle} labels={{ house: t.house, lagna: t.ascendant, center: 'Navamsa (D9)' }} />
         <section className="content-card nested">
